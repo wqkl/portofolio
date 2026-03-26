@@ -146,27 +146,30 @@ function animate() {
   camera.position.x = mouse.x * 2;
   camera.lookAt(0, -scrollY * 0.005, 0);
 
-  // Update connection lines
-  let lineIndex = 0;
-  const threshold = 8;
-  for (let i = 0; i < Math.min(particleCount, 200); i++) {
-    for (let j = i + 1; j < Math.min(particleCount, 200); j++) {
-      const dx = pos[i * 3] - pos[j * 3];
-      const dy = pos[i * 3 + 1] - pos[j * 3 + 1];
-      const dz = pos[i * 3 + 2] - pos[j * 3 + 2];
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (dist < threshold && lineIndex < linePositions.length - 6) {
-        linePositions[lineIndex++] = pos[i * 3];
-        linePositions[lineIndex++] = pos[i * 3 + 1];
-        linePositions[lineIndex++] = pos[i * 3 + 2];
-        linePositions[lineIndex++] = pos[j * 3];
-        linePositions[lineIndex++] = pos[j * 3 + 1];
-        linePositions[lineIndex++] = pos[j * 3 + 2];
+  // Update connection lines (every 3 frames to save CPU)
+  if (Math.floor(time * 60) % 3 === 0) {
+    let lineIndex = 0;
+    const thresholdSq = 64; // 8^2, skip sqrt
+    const checkCount = 100;
+    for (let i = 0; i < checkCount; i++) {
+      for (let j = i + 1; j < checkCount; j++) {
+        const dx = pos[i * 3] - pos[j * 3];
+        const dy = pos[i * 3 + 1] - pos[j * 3 + 1];
+        const dz = pos[i * 3 + 2] - pos[j * 3 + 2];
+        const distSq = dx * dx + dy * dy + dz * dz;
+        if (distSq < thresholdSq && lineIndex < linePositions.length - 6) {
+          linePositions[lineIndex++] = pos[i * 3];
+          linePositions[lineIndex++] = pos[i * 3 + 1];
+          linePositions[lineIndex++] = pos[i * 3 + 2];
+          linePositions[lineIndex++] = pos[j * 3];
+          linePositions[lineIndex++] = pos[j * 3 + 1];
+          linePositions[lineIndex++] = pos[j * 3 + 2];
+        }
       }
     }
+    for (let i = lineIndex; i < linePositions.length; i++) linePositions[i] = 0;
+    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
   }
-  for (let i = lineIndex; i < linePositions.length; i++) linePositions[i] = 0;
-  lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
 
   renderer.render(scene, camera);
 }
@@ -251,7 +254,6 @@ document.querySelectorAll('.stat-number').forEach((el) => counterObserver.observ
 // ── Smooth nav highlight ──
 const sections = document.querySelectorAll('section');
 const navLinks = document.querySelectorAll('.nav-links a');
-
 window.addEventListener('scroll', () => {
   let current = '';
   sections.forEach((section) => {

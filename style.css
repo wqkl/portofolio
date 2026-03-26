@@ -278,8 +278,38 @@ section {
 /* Skills */
 .skills-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: 2rem;
+}
+
+.skills-grid .skill-category {
+  grid-column: span 2;
+}
+
+/* Center last 2 items: offset by 1 col */
+.skills-grid .skill-category:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+
+.skills-grid .skill-category:nth-child(5) {
+  grid-column: 4 / span 2;
+}
+
+@media (max-width: 900px) {
+  .skills-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .skills-grid .skill-category,
+  .skills-grid .skill-category:nth-child(4),
+  .skills-grid .skill-category:nth-child(5) {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 550px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .skill-category {
