@@ -222,7 +222,7 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, observerOptions);
 
-document.querySelectorAll('.section-container, .hero-content').forEach((el) => {
+document.querySelectorAll('.section-container, .home-content').forEach((el) => {
   el.classList.add('fade-in');
   observer.observe(el);
 });
