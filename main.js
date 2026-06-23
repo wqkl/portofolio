@@ -1,269 +1,195 @@
-import * as THREE from 'three';
+window.onload = function () {
+  var messagesEl = document.querySelector('.messages');
+  var typingSpeed = 20;
+  var loadingText = '<b>•</b><b>•</b><b>•</b>';
+  var messageIndex = 0;
 
-// ── Three.js Background ──
-const canvas = document.getElementById('bg-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 30;
-
-// Particles
-const particleCount = 1500;
-const positions = new Float32Array(particleCount * 3);
-const colors = new Float32Array(particleCount * 3);
-const sizes = new Float32Array(particleCount);
-
-const accentColor = new THREE.Color(0x4f8fff);
-const secondaryColor = new THREE.Color(0x7c5cfc);
-
-for (let i = 0; i < particleCount; i++) {
-  positions[i * 3] = (Math.random() - 0.5) * 80;
-  positions[i * 3 + 1] = (Math.random() - 0.5) * 80;
-  positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
-
-  const color = Math.random() > 0.5 ? accentColor : secondaryColor;
-  colors[i * 3] = color.r;
-  colors[i * 3 + 1] = color.g;
-  colors[i * 3 + 2] = color.b;
-
-  sizes[i] = Math.random() * 2 + 0.5;
-}
-
-const particleGeometry = new THREE.BufferGeometry();
-particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-const particleMaterial = new THREE.PointsMaterial({
-  size: 0.15,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.7,
-  blending: THREE.AdditiveBlending,
-  sizeAttenuation: true,
-});
-
-const particles = new THREE.Points(particleGeometry, particleMaterial);
-scene.add(particles);
-
-// Floating geometric shapes
-const shapes = [];
-const shapeMaterial = new THREE.MeshPhongMaterial({
-  color: 0x4f8fff,
-  transparent: true,
-  opacity: 0.15,
-  wireframe: true,
-});
-
-const geometries = [
-  new THREE.IcosahedronGeometry(2, 1),
-  new THREE.OctahedronGeometry(1.5, 0),
-  new THREE.TetrahedronGeometry(1.8, 0),
-  new THREE.TorusGeometry(1.5, 0.4, 8, 16),
-  new THREE.DodecahedronGeometry(1.3, 0),
-];
-
-for (let i = 0; i < 8; i++) {
-  const geo = geometries[i % geometries.length];
-  const mat = shapeMaterial.clone();
-  mat.color = new THREE.Color().lerpColors(accentColor, secondaryColor, Math.random());
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(
-    (Math.random() - 0.5) * 40,
-    (Math.random() - 0.5) * 40,
-    (Math.random() - 0.5) * 20 - 10
-  );
-  mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-  mesh.userData = {
-    rotSpeed: { x: (Math.random() - 0.5) * 0.01, y: (Math.random() - 0.5) * 0.01 },
-    floatSpeed: Math.random() * 0.5 + 0.5,
-    floatOffset: Math.random() * Math.PI * 2,
+  var getCurrentTime = function () {
+    var hours = new Date().getHours();
+    if (hours >= 5 && hours < 19) return 'Have a nice day';
+    if (hours >= 19 && hours < 22) return 'Have a nice evening';
+    return 'Have a good night';
   };
-  shapes.push(mesh);
-  scene.add(mesh);
-}
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0x4f8fff, 0.3);
-scene.add(ambientLight);
-const pointLight = new THREE.PointLight(0x7c5cfc, 1, 100);
-pointLight.position.set(10, 10, 20);
-scene.add(pointLight);
+  var hellos = [
+    'Hey there', 'Hola', 'Bonjour', 'Ciao', 'Hallo', 'Olá', 'Halo', 'Hej',
+    '你好 (Nǐ hǎo)', 'こんにちは (Konnichiwa)', '안녕하세요 (Annyeong)', 'Xin chào',
+  ];
 
-// Connection lines between nearby particles
-const lineGeometry = new THREE.BufferGeometry();
-const linePositions = new Float32Array(particleCount * 6);
-const lineMaterial = new THREE.LineBasicMaterial({
-  color: 0x4f8fff,
-  transparent: true,
-  opacity: 0.05,
-  blending: THREE.AdditiveBlending,
-});
-const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-scene.add(lines);
+  var messages = [
+    hellos[anime.random(0, hellos.length - 1)] + ' 👋',
+    "I'm Daniel",
+    'I design automation systems & code things on the web',
+    'From automating programs to modern web apps',
+    'You can find me on <a target="_blank" href="https://github.com/wqkl">GitHub</a> and <a target="_blank" href="https://www.linkedin.com/in/danielchristian06/">LinkedIn</a>',
+    getCurrentTime(),
+    '~ DCN',
+  ];
 
-// Mouse tracking
-const mouse = { x: 0, y: 0 };
-document.addEventListener('mousemove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-});
+  var getFontSize = function () {
+    return parseInt(getComputedStyle(document.body).getPropertyValue('font-size'));
+  };
 
-// Scroll tracking
-let scrollY = 0;
-window.addEventListener('scroll', () => {
-  scrollY = window.scrollY;
-});
+  var pxToRem = function (px) {
+    return px / getFontSize() + 'rem';
+  };
 
-// Animation loop
-function animate() {
-  requestAnimationFrame(animate);
-  const time = performance.now() * 0.001;
+  var createBubbleElements = function (message, position) {
+    var bubbleEl = document.createElement('div');
+    var messageEl = document.createElement('span');
+    var loadingEl = document.createElement('span');
+    bubbleEl.classList.add('bubble', 'is-loading', 'cornered', position === 'right' ? 'right' : 'left');
+    messageEl.classList.add('message');
+    loadingEl.classList.add('loading');
+    messageEl.innerHTML = message;
+    loadingEl.innerHTML = loadingText;
+    bubbleEl.appendChild(loadingEl);
+    bubbleEl.appendChild(messageEl);
+    bubbleEl.style.opacity = '0';
+    return { bubble: bubbleEl, message: messageEl, loading: loadingEl };
+  };
 
-  // Rotate particles slowly
-  particles.rotation.y = time * 0.03 + mouse.x * 0.1;
-  particles.rotation.x = mouse.y * 0.05;
+  var getDimentions = function (elements) {
+    var messageW = elements.message.offsetWidth + 2;
+    var messageH = elements.message.offsetHeight;
+    var messageS = getComputedStyle(elements.bubble);
+    var paddingTop = Math.ceil(parseFloat(messageS.paddingTop));
+    var paddingLeft = Math.ceil(parseFloat(messageS.paddingLeft));
+    return {
+      loading: { w: '4rem', h: '2.25rem' },
+      bubble: { w: pxToRem(messageW + paddingLeft * 2), h: pxToRem(messageH + paddingTop * 2) },
+      message: { w: pxToRem(messageW), h: pxToRem(messageH) },
+    };
+  };
 
-  // Float positions
-  const pos = particleGeometry.attributes.position.array;
-  for (let i = 0; i < particleCount; i++) {
-    pos[i * 3 + 1] += Math.sin(time * 0.3 + i * 0.1) * 0.002;
-  }
-  particleGeometry.attributes.position.needsUpdate = true;
-
-  // Animate shapes
-  shapes.forEach((shape) => {
-    shape.rotation.x += shape.userData.rotSpeed.x;
-    shape.rotation.y += shape.userData.rotSpeed.y;
-    shape.position.y += Math.sin(time * shape.userData.floatSpeed + shape.userData.floatOffset) * 0.005;
-  });
-
-  // Camera parallax based on scroll
-  camera.position.y = -scrollY * 0.005;
-  camera.position.x = mouse.x * 2;
-  camera.lookAt(0, -scrollY * 0.005, 0);
-
-  // Update connection lines (every 3 frames to save CPU)
-  if (Math.floor(time * 60) % 3 === 0) {
-    let lineIndex = 0;
-    const thresholdSq = 64; // 8^2, skip sqrt
-    const checkCount = 100;
-    for (let i = 0; i < checkCount; i++) {
-      for (let j = i + 1; j < checkCount; j++) {
-        const dx = pos[i * 3] - pos[j * 3];
-        const dy = pos[i * 3 + 1] - pos[j * 3 + 1];
-        const dz = pos[i * 3 + 2] - pos[j * 3 + 2];
-        const distSq = dx * dx + dy * dy + dz * dz;
-        if (distSq < thresholdSq && lineIndex < linePositions.length - 6) {
-          linePositions[lineIndex++] = pos[i * 3];
-          linePositions[lineIndex++] = pos[i * 3 + 1];
-          linePositions[lineIndex++] = pos[i * 3 + 2];
-          linePositions[lineIndex++] = pos[j * 3];
-          linePositions[lineIndex++] = pos[j * 3 + 1];
-          linePositions[lineIndex++] = pos[j * 3 + 2];
-        }
-      }
+  var sendMessage = function (message, position) {
+    var loadingDuration = (message.replace(/<(?:.|\n)*?>/gm, '').length * typingSpeed) + 500;
+    var elements = createBubbleElements(message, position);
+    messagesEl.appendChild(elements.bubble);
+    messagesEl.appendChild(document.createElement('br'));
+    var dimensions = getDimentions(elements);
+    elements.message.style.display = 'block';
+    elements.bubble.style.width = '0rem';
+    elements.bubble.style.height = dimensions.loading.h;
+    elements.message.style.width = dimensions.message.w;
+    elements.message.style.height = dimensions.message.h;
+    elements.bubble.style.opacity = '1';
+    var bubbleOffset = elements.bubble.offsetTop + elements.bubble.offsetHeight;
+    if (bubbleOffset > messagesEl.offsetHeight) {
+      anime({ targets: messagesEl, scrollTop: bubbleOffset, duration: 750 });
     }
-    for (let i = lineIndex; i < linePositions.length; i++) linePositions[i] = 0;
-    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-  }
+    var bubbleSize = anime({
+      targets: elements.bubble,
+      width: ['0ch', dimensions.loading.w],
+      marginTop: ['2.5rem', 0],
+      marginLeft: ['-2.5rem', 0],
+      duration: 800,
+      easing: 'easeOutElastic',
+    });
+    var loadingLoop = anime({
+      targets: elements.bubble,
+      scale: [1.05, .95],
+      duration: 1100,
+      loop: true,
+      direction: 'alternate',
+      easing: 'easeInOutQuad',
+    });
+    anime({
+      targets: elements.loading,
+      translateX: ['-2rem', '0rem'],
+      scale: [.5, 1],
+      duration: 400,
+      delay: 25,
+      easing: 'easeOutElastic',
+    });
+    var dotsPulse = anime({
+      targets: elements.bubble.querySelectorAll('b'),
+      scale: [1, 1.25],
+      opacity: [.5, 1],
+      duration: 300,
+      loop: true,
+      direction: 'alternate',
+      delay: function (i) { return (i * 100) + 50; },
+    });
+    setTimeout(function () {
+      loadingLoop.pause();
+      dotsPulse.restart({
+        opacity: 0,
+        scale: 0,
+        loop: false,
+        direction: 'forwards',
+        update: function (a) {
+          if (a.progress >= 65 && elements.bubble.classList.contains('is-loading')) {
+            elements.bubble.classList.remove('is-loading');
+            anime({ targets: elements.message, opacity: [0, 1], duration: 300 });
+          }
+        },
+      });
+      bubbleSize.restart({
+        scale: 1,
+        width: [dimensions.loading.w, dimensions.bubble.w],
+        height: [dimensions.loading.h, dimensions.bubble.h],
+        marginTop: 0,
+        marginLeft: 0,
+        begin: function () {
+          if (messageIndex < messages.length) elements.bubble.classList.remove('cornered');
+        },
+      });
+    }, loadingDuration - 50);
+  };
 
-  renderer.render(scene, camera);
-}
-animate();
+  var textLen = function (m) {
+    return m.replace(/<(?:.|\n)*?>/gm, '').length;
+  };
 
-// Resize
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  var replies = {
+    'Projects': [
+      '📷 OCV System — optical character verification for automated quality inspection',
+      '🐔 Environmental Monitoring — PID-controlled IoT for poultry farms',
+      '🌐 This site — a chat-style portfolio in vanilla JS + anime.js',
+    ],
+    'About me': [
+      "I'm an Automation Engineer & Web Developer",
+      'I build systems that bridge hardware and the web — PLCs, IoT sensors, dashboards',
+      'Off the clock I tinker with electronics and 3D things',
+    ],
+  };
 
-// ── Typing effect ──
-const titles = ['Automation Engineer', 'Web Developer', 'Problem Solver', 'Tech Enthusiast'];
-const typedEl = document.getElementById('typed-text');
-let titleIndex = 0;
-let charIndex = 0;
-let isDeleting = false;
+  // Type out a list of bubbles, then run done().
+  var streamMessages = function (list, done) {
+    var message = list.shift();
+    if (!message) { if (done) setTimeout(done, 400); return; }
+    sendMessage(message);
+    setTimeout(function () { streamMessages(list, done); },
+      (textLen(message) * typingSpeed) + anime.random(900, 1200));
+  };
 
-function typeEffect() {
-  const current = titles[titleIndex];
-  if (isDeleting) {
-    typedEl.textContent = current.substring(0, charIndex--);
-    if (charIndex < 0) {
-      isDeleting = false;
-      titleIndex = (titleIndex + 1) % titles.length;
-      setTimeout(typeEffect, 500);
-      return;
-    }
-    setTimeout(typeEffect, 40);
-  } else {
-    typedEl.textContent = current.substring(0, charIndex++);
-    if (charIndex > current.length) {
-      isDeleting = true;
-      setTimeout(typeEffect, 2000);
-      return;
-    }
-    setTimeout(typeEffect, 80);
-  }
-}
-typeEffect();
+  // Tappable quick-reply chips: tap → answer types out → menu returns.
+  var showMenu = function () {
+    var menu = document.createElement('div');
+    menu.className = 'menu';
+    Object.keys(replies).forEach(function (label, i) {
+      if (i) menu.appendChild(document.createTextNode(' '));
+      var chip = document.createElement('span');
+      chip.className = 'bubble right chip';
+      chip.textContent = label;
+      chip.onclick = function () {
+        menu.remove();
+        streamMessages(replies[label].slice(), showMenu);
+      };
+      menu.appendChild(chip);
+    });
+    messagesEl.appendChild(menu);
+    anime({ targets: menu, opacity: [0, 1], translateY: [8, 0], duration: 400 });
+  };
 
-// ── Scroll animations ──
-const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, observerOptions);
+  var sendMessages = function () {
+    var message = messages[messageIndex];
+    if (!message) { showMenu(); return; }
+    sendMessage(message);
+    ++messageIndex;
+    setTimeout(sendMessages, (textLen(message) * typingSpeed) + anime.random(900, 1200));
+  };
 
-document.querySelectorAll('.section-container, .home-content').forEach((el) => {
-  el.classList.add('fade-in');
-  observer.observe(el);
-});
-
-// ── Counter animation ──
-const counterObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      const el = entry.target;
-      const target = parseInt(el.dataset.target);
-      let count = 0;
-      const increment = target / 40;
-      const timer = setInterval(() => {
-        count += increment;
-        if (count >= target) {
-          el.textContent = target;
-          clearInterval(timer);
-        } else {
-          el.textContent = Math.floor(count);
-        }
-      }, 40);
-      counterObserver.unobserve(el);
-    }
-  });
-}, { threshold: 0.5 });
-
-document.querySelectorAll('.stat-number').forEach((el) => counterObserver.observe(el));
-
-// ── Smooth nav highlight ──
-const sections = document.querySelectorAll('section');
-const navLinks = document.querySelectorAll('.nav-links a');
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach((section) => {
-    const top = section.offsetTop - 100;
-    if (scrollY >= top) current = section.getAttribute('id');
-  });
-  navLinks.forEach((link) => {
-    link.style.color = '';
-    if (link.getAttribute('href') === `#${current}`) {
-      link.style.color = 'var(--accent)';
-    }
-  });
-});
+  sendMessages();
+};
