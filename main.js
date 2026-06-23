@@ -5,10 +5,11 @@ window.onload = function () {
   var messageIndex = 0;
 
   var getCurrentTime = function () {
-    var hours = new Date().getHours();
-    if (hours >= 5 && hours < 19) return 'Have a nice day';
-    if (hours >= 19 && hours < 22) return 'Have a nice evening';
-    return 'Have a good night';
+    var h = new Date().getHours();
+    if (h >= 5 && h < 12) return 'Off to automate something';
+    if (h >= 12 && h < 20) return 'Less clicking, more shipping';
+    if (h >= 2 && h < 5) return "It's dawn and you're still here? Respect"; // ponytail: easter egg
+    return 'Late one — git commit -m "sleep"';
   };
 
   var hellos = [
@@ -65,8 +66,16 @@ window.onload = function () {
   var sendMessage = function (message, position) {
     var loadingDuration = (message.replace(/<(?:.|\n)*?>/gm, '').length * typingSpeed) + 500;
     var elements = createBubbleElements(message, position);
-    messagesEl.appendChild(elements.bubble);
-    messagesEl.appendChild(document.createElement('br'));
+    if (position === 'right') {
+      // Right bubbles ride in a right-aligned block row so they sit on the sent side.
+      var row = document.createElement('div');
+      row.style.textAlign = 'right';
+      row.appendChild(elements.bubble);
+      messagesEl.appendChild(row);
+    } else {
+      messagesEl.appendChild(elements.bubble);
+      messagesEl.appendChild(document.createElement('br'));
+    }
     var dimensions = getDimentions(elements);
     elements.message.style.display = 'block';
     elements.bubble.style.width = '0rem';
@@ -134,6 +143,14 @@ window.onload = function () {
         begin: function () {
           if (messageIndex < messages.length) elements.bubble.classList.remove('cornered');
         },
+        complete: function () {
+          // Drop the frozen px-derived sizes so the bubble reflows on resize.
+          elements.bubble.style.width = '';
+          elements.bubble.style.height = '';
+          elements.message.style.width = '';
+          elements.message.style.height = '';
+          elements.message.style.display = '';
+        },
       });
     }, loadingDuration - 50);
   };
@@ -144,9 +161,9 @@ window.onload = function () {
 
   var replies = {
     'Projects': [
-      '📷 OCV System — optical character verification for automated quality inspection',
-      '🐔 Environmental Monitoring — PID-controlled IoT for poultry farms',
-      '🌐 This site — a chat-style portfolio in vanilla JS + anime.js',
+      'OCV System — optical character verification for automated quality inspection',
+      'Environmental Monitoring — PID-controlled IoT for poultry farms',
+      'This site — a chat-style portfolio',
     ],
     'About me': [
       "I'm an Automation Engineer & Web Developer",
@@ -175,7 +192,10 @@ window.onload = function () {
       chip.textContent = label;
       chip.onclick = function () {
         menu.remove();
-        streamMessages(replies[label].slice(), showMenu);
+        sendMessage(label, 'right'); // echo the tap as a sent bubble
+        setTimeout(function () {
+          streamMessages(replies[label].slice(), showMenu);
+        }, (textLen(label) * typingSpeed) + 600);
       };
       menu.appendChild(chip);
     });
