@@ -50,6 +50,7 @@ body {
 }
 
 .bubble {
+  position: relative;
   overflow: hidden;
   display: inline-block;
   margin: 0 0 .125rem 0;
@@ -75,9 +76,14 @@ body {
 
 .bubble .loading {
   position: absolute;
+  top: 0;
+  left: .85rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
   white-space: pre;
-  font-size: 1.625rem;
-  line-height: 1rem;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .bubble .loading b {
